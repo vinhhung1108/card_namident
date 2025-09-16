@@ -45,6 +45,17 @@ class Card extends ActiveRecord
         [['card_code'], 'string', 'max' => 50],
         [['card_code'], 'unique', 'message' => 'Mã thẻ này đã tồn tại.'],
         ['card_code', 'filter', 'filter' => 'trim'],
+
+        ['issue_price', 'default', 'value' => 0],
+
+        // ----- SANITIZE / CAST -----
+        ['issue_price', 'filter', 'filter' => function($v){
+            if ($v === '' || $v === null) return 0;
+            return (int)preg_replace('/[^\d]/', '', (string)$v);
+        }],
+
+        // Kiểu số
+        [['issue_price'], 'integer', 'min' => 0],
         
         [['referral_id'], 'integer'],
         ['referral_id', 'exist', 'skipOnError' => true,
@@ -120,6 +131,7 @@ class Card extends ActiveRecord
             'updated_by' => 'Người cập nhật',
             'expired_at_ui' => 'Ngày hết hạn',
             'used_value'     => 'Đã sử dụng',
+            'issue_price' => 'Giá phát hành (VND)',
 
         ];
     }
@@ -235,7 +247,7 @@ class Card extends ActiveRecord
         }
     }
 
-    public function getValueVnd(){ return number_format((int)$this->value, 0, ',', '.'); }
+    public function getValueVnd(){ return number_format((int)$this->value, 0, '.', ','); }
     public function getRemainingValueVnd(){ return number_format((int)$this->remaining_value, 0, ',', '.'); }
     public function getUsages()
     {
@@ -247,7 +259,7 @@ class Card extends ActiveRecord
     {
         $sc = parent::scenarios();
         // Các field cho form
-        $common = ['value','expired_at_ui','referral_id','serviceIds','partnerIds','used_value'];
+        $common = ['value','issue_price','expired_at_ui','referral_id','serviceIds','partnerIds','used_value'];
 
         $sc['create'] = array_merge(['card_code'], $common); // tạo mới: có card_code
         $sc['update'] = $common;                              // cập nhật: KHÔNG có card_code

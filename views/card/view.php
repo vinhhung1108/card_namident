@@ -2,6 +2,8 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\helpers\ArrayHelper;
+
 
 use yii\helpers\Url;
 $qrImg  = Url::to(['card/qr','code'=>$model->card_code], true);
@@ -13,8 +15,6 @@ $pubUrl = Url::to(['card/show','code'=>$model->card_code], true);
 $this->registerCss(<<<CSS
 .rel-box{margin-top:10px}
 .rel-title{margin:0 0 8px;font-size:16px;font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-block;padding:6px 10px;border-radius:999px;font-size:13px;line-height:1;white-space:nowrap;border:1px solid #e5e7eb;background:#f8fafc;color:#0f172a;text-decoration:none}
 .chip:hover{background:#eef2ff;border-color:#c7d2fe}
 .chip-info{background:#ecfeff;border-color:#a5f3fc;color:#075985}
 .chip-info:hover{background:#cffafe;border-color:#67e8f9}
@@ -22,6 +22,32 @@ $this->registerCss(<<<CSS
 .chip-secondary:hover{background:#e2e8f0}
 .empty-hint{padding:10px 12px;border:1px dashed #e5e7eb;border-radius:10px;color:#64748b;background:#fafafa}
 @media (min-width:768px){.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}}
+CSS);
+
+// Chips & partner card (giống show)
+$this->registerCss(<<<CSS
+.partner-list{display:flex;flex-direction:column;gap:10px}
+.partner-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+.partner-name{font-weight:700;color:#0f172a;margin-bottom:6px}
+.partner-meta{display:grid;grid-template-columns:1fr;gap:4px}
+.partner-meta .label{color:#64748b;min-width:50px;display:inline-block;margin-right:2px}
+.partner-meta .value a{text-decoration:none}
+.partner-meta .value a:hover{text-decoration:underline}
+@media(min-width:700px){.partner-meta{grid-template-columns:1fr 1fr}}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.card-view .chip{
+  padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;line-height:1;
+  white-space:nowrap;border:1px solid transparent;transition:transform .08s ease,box-shadow .18s ease
+}
+.card-view .chip:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(2,6,23,.10)}
+.card-view .chip-indigo {background:linear-gradient(180deg,#eef2ff,#e0e7ff);color:#1e3a8a;border-color:#c7d2fe}
+.card-view .chip-cyan   {background:linear-gradient(180deg,#ecfeff,#cffafe);color:#155e75;border-color:#67e8f9}
+.card-view .chip-emerald{background:linear-gradient(180deg,#ecfdf5,#d1fae5);color:#065f46;border-color:#6ee7b7}
+.card-view .chip-amber  {background:linear-gradient(180deg,#fffbeb,#fde68a);color:#92400e;border-color:#fcd34d}
+.card-view .chip-rose   {background:linear-gradient(180deg,#fff1f2,#ffe4e6);color:#9f1239;border-color:#fecdd3}
+.card-view .chip-violet {background:linear-gradient(180deg,#f5f3ff,#ede9fe);color:#5b21b6;border-color:#ddd6fe}
+@media print{ .card-view .chip{background:#fff;border-color:#bbb;color:#111;box-shadow:none} }
 CSS);
 
 /* @var $this yii\web\View */
@@ -70,6 +96,11 @@ $this->params['breadcrumbs'][] = $this->title;
             'card_code',
             'value:decimal',
             [
+              'attribute' => 'issue_price',
+              'format'    => ['decimal', 0],
+              'label'     => 'Giá phát hành',
+            ],
+            [
               'attribute' => 'used_value',
               'format'    => 'decimal',
               'label'     => 'Đã sử dụng',
@@ -98,37 +129,65 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
-  <div class="rel-grid">
-    
+  <?php
+      // Lấy danh sách service id của thẻ
+      $cardServiceIds = array_map('intval', ArrayHelper::getColumn($model->services, 'id'));
+      // Bảng màu cho chip
+      $palette = ['indigo','cyan','emerald','amber','rose','violet'];
 
-    <!-- Đối tác -->
-    <div class="rel-box">
-      <div> <strong class="rel-title">Đối tác áp dụng </strong><?= Html::a('<i>Xem danh sách</i>', ['partner/index'], ['target'=>'_blank']) ?></div>
-      <?php if ($model->partners): ?>
-        <div class="chips">
-          <?php foreach ($model->partners as $p): ?>
-            <?= Html::a(Html::encode($p->name), ['partner/view', 'id' => $p->id], ['class' => 'chip chip-secondary']) ?>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <div class="empty-hint">Chưa gắn đối tác nào.</div>
-      <?php endif; ?>
-    </div>
-  </div>
+      // Helper hiển thị an toàn + tel link
+      $fmt = fn($v) => $v ? Html::encode($v) : '—';
+      $tel = function($p){
+          if (!$p) return '—';
+          $plain = preg_replace('/\D+/', '', $p);
+          return Html::a(Html::encode($p), 'tel:' . $plain);
+      };
+  ?>
 
-  <!-- Dịch vụ -->
-    <div class="rel-box">
-     <div> <strong class="rel-title">Dịch vụ áp dụng </strong><?= Html::a('<i>Xem danh sách</i>', ['service/index'], ['target'=>'_blank']) ?></div>
-      <?php if ($model->services): ?>
-        <div class="chips">
-          <?php foreach ($model->services as $s): ?>
-            <?= Html::a(Html::encode($s->name), ['service/view', 'id' => $s->id], ['class' => 'chip chip-info']) ?>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <div class="empty-hint">Chưa gắn dịch vụ nào.</div>
-      <?php endif; ?>
-    </div>
+  <div class="section pb-4" style="margin-top:16px">
+    <h3 style="font-size:16px;margin:0 0 8px">Đối tác & dịch vụ áp dụng</h3>
+
+    <?php if ($model->partners): ?>
+      <div class="partner-list">
+        <?php foreach ($model->partners as $p): ?>
+          <div class="partner-item pb-2">
+            <div class="partner-name"><?= $fmt($p->name) ?></div>
+            <div class="partner-meta">
+              <div><span class="label">Địa chỉ:</span> <span class="value"><?= $fmt($p->address ?? $p->dia_chi ?? null) ?></span></div>
+              <div><span class="label">Điện thoại:</span> <span class="value"><?= $tel($p->phone ?? $p->so_dien_thoai ?? null) ?></span></div>
+            </div>
+
+            <?php
+              // Dịch vụ khả dụng của đối tác này AND thuộc danh sách dịch vụ của thẻ
+              $availServices = $p->servicesAvailable ?? [];
+              $showServices  = [];
+              foreach ($availServices as $sv) {
+                  if (in_array((int)$sv->id, $cardServiceIds, true)) {
+                      $showServices[] = $sv;
+                  }
+              }
+            ?>
+
+            <div class="section" style="margin-top:10px">
+              <div class="text-muted" style="margin-bottom:6px">Dịch vụ áp dụng:</div>
+              <?php if ($showServices): ?>
+                <div class="chips">
+                  <?php foreach ($showServices as $sv): ?>
+                    <?php $cls = 'chip chip-' . $palette[$sv->id % count($palette)]; ?>
+                    <span class="<?= $cls ?>"><?= Html::encode($sv->name) ?></span>
+                  <?php endforeach; ?>
+                </div>
+              <?php else: ?>
+                <div class="alert alert-secondary mb-0">Đối tác này chưa có dịch vụ áp dụng trong thẻ.</div>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <div class="alert alert-secondary">Chưa có đối tác áp dụng.</div>
+    <?php endif; ?>
+</div>
 
 </div>
 

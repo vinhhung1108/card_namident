@@ -110,8 +110,19 @@ $(document).on("change", "#card-partnerids", rebuildServiceOptions);
                   'removeMaskOnSubmit' => true, // gửi số sạch
                   'autoUnmask' => true,      // <-- THÊM DÒNG NÀY
               ],
-          ]) ?></div>
+          ]) ?>
+    </div>
+
     <div class="col-sm-6 col-lg-4">
+      <?= $form->field($model,'issue_price')->widget(\yii\widgets\MaskedInput::class, [
+          'clientOptions' => [
+              'alias' => 'decimal', 'groupSeparator' => ',', 'autoGroup' => true,
+              'digits' => 0, 'digitsOptional' => false, 'rightAlign' => false,
+              'removeMaskOnSubmit' => true, 'autoUnmask' => true,
+          ],
+      ])->hint('Số tiền phát hành.') ?>
+    </div>
+    <div class="col-sm-12 col-lg-12">
       <?= $form->field($model,'used_value')
           ->textInput([
               'value'    => Yii::$app->formatter->asDecimal((int)$model->used_value, 0),

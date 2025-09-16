@@ -39,25 +39,27 @@ $this->params['breadcrumbs'][] = $this->title;
     'label' => 'Giá trị (VND)',
     'value' => fn($m) => $m->valueVnd,
 ],
+'issue_price:decimal',
 [
-    'attribute' => 'remaining_value',
-    'label' => 'Còn lại (VND)',
-    'value' => fn($m) => $m->remainingValueVnd,
+    'attribute' => 'used_value',
+    'label' => 'Đã sử dụng (VND)',
+    'value' => fn($m) => $m->valueVnd,
 ],
+'remaining_value:decimal',
 'expired_at:date',
 [
     'attribute' => 'referral_id',
     'label' => 'Mã giới thiệu',
     'value' => fn($m) => $m->referral ? $m->referral->code : null,
 ],
-[
-    'label' => 'Dịch vụ',
-    'format' => 'raw',
-    'value' => function($m){
-        $names = array_map(fn($s)=>$s->name, $m->services);
-        return $names ? '<span class="badge bg-info">'.implode('</span> <span class="badge bg-info">', $names).'</span>' : '';
-    }
-],
+// [
+//     'label' => 'Dịch vụ',
+//     'format' => 'raw',
+//     'value' => function($m){
+//         $names = array_map(fn($s)=>$s->name, $m->services);
+//         return $names ? '<span class="badge bg-info">'.implode('</span> <span class="badge bg-info">', $names).'</span>' : '';
+//     }
+// ],
 [
     'label' => 'Đối tác',
     'format' => 'raw',
